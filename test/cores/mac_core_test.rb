@@ -31,6 +31,17 @@ if platform?("darwin") # Only run test if it's darwin
       end
       asserts("returns last tab") { @mac_core.open_tab }
     end
+    
+    context "open_tab with options" do
+      setup do
+        process = Object.new
+        mock(process).keystroke('t', :using => :command_down)
+        mock(@mac_core).set_options(true, :option1 => '1', :option2 => '2')        
+        mock(@mac_core).return_last_tab.times(2)   { true    }
+        mock(@mac_core).terminal_process  { process }
+      end
+      asserts("returns last tab") { @mac_core.open_tab(:option1 => '1', :option2 => '2') }
+    end
 
     context "open_window" do
       setup do
@@ -42,6 +53,19 @@ if platform?("darwin") # Only run test if it's darwin
       asserts("returns last tab") { @mac_core.open_window }
     end
 
+    context "open_window with options" do
+      setup do
+        process = Object.new
+        window = Object.new
+        mock(process).keystroke('n', :using => :command_down)
+        mock(@mac_core).set_options(window, :option1 => '1', :option2 => "2")
+        mock(@mac_core).active_window { window }        
+        mock(@mac_core).return_last_tab   { true    }
+        mock(@mac_core).terminal_process  { process }
+      end
+      asserts("opens window with options") { @mac_core.open_window(:option1 => '1', :option2 => '2')}
+    end
+    
     context "return_last_tab" do
       setup do
         window = Object.new
@@ -76,6 +100,10 @@ if platform?("darwin") # Only run test if it's darwin
       end
       asserts("gives me window") { Terminitor::MacCore.new('/path/to').active_window }
     end
+    
+    # context "set_options" do 
+    #   TODO: add tests
+    # end
   end
 else
   context "MacCore" do

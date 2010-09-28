@@ -12,17 +12,18 @@ module Terminitor
     def process!
       term_setups = @termfile[:setup]
       term_windows = @termfile[:windows]
-      run_in_window(term_windows['default'], :default => true) unless term_windows['default'].to_s.empty?
+      term_options = @termfile[:options]
+      run_in_window('default', term_windows['default'], :default => true) unless term_windows['default'].to_s.empty?
       term_windows.delete('default')
-      term_windows.each_pair { |window_name, tabs| run_in_window(tabs) }
+      term_windows.each_pair { |window_name, tabs| run_in_window(window_name, tabs) }
     end
 
     # this command will run commands in the designated window
-    # run_in_window {:tab1 => ['ls','ok']}
-    def run_in_window(tabs, options = {})
-      open_window unless options[:default]
+    # run_in_window 'window1', {:tab1 => ['ls','ok']}
+    def run_in_window(window_name, tabs, options = {})
+      open_window(object_options(window_name)) unless options[:default]
       tabs.each_pair do |tab_name,commands|
-        tab = open_tab
+        tab = open_tab(object_options(tab_name))
         commands.insert(0,  "cd \"#{@working_dir}\"") unless @working_dir.to_s.empty?
         commands.each do |cmd|
           execute_command(cmd, :in => tab)
@@ -35,6 +36,11 @@ module Terminitor
     def load_termfile(path)
       File.extname(path) == '.yml' ? Terminitor::Yaml.new(path).to_hash : Terminitor::Dsl.new(path).to_hash
     end
+    
+    # Returns options for the given window or tab
+    def object_options(object_name)
+      @termfile[:options][object_name] if @termfile[:options]
+    end
 
 
     ## These methods are core specific methods that need to be defined.
@@ -46,12 +52,12 @@ module Terminitor
     end
 
     # Opens a new tab and returns itself.
-    def open_tab
+    def open_tab(options = nil)
       @working_dir = Dir.pwd # pass in current directory.
     end
 
     # Opens a new window and returns the tab object.
-    def open_window
+    def open_window(options = nil)
     end
 
   end

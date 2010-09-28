@@ -19,15 +19,17 @@ module Terminitor
     end
 
     # Opens a new tab and returns itself.
-    def open_tab
+    def open_tab(options = nil)
       terminal_process.keystroke("t", :using => :command_down)
       @working_dir = Dir.pwd
+      set_options(return_last_tab, options) if options
       return_last_tab
     end
 
     # Opens A New Window and returns the tab object.
-    def open_window
+    def open_window(options = nil)
       terminal_process.keystroke("n", :using => :command_down)
+      set_options(active_window, options) if options
       return_last_tab
     end
 
@@ -52,6 +54,37 @@ module Terminitor
         window.properties_.get[:frontmost] rescue false
       end
     end
+    
+    # Sets options of the given object
+    def set_options(object, options = {})
+      options.each_pair do |option, value| 
+        case option
+        when :settings   # works for windows and tabs, for example :settings => "Grass"
+          begin
+            object.current_settings.set(@terminal.settings_sets[value])
+          rescue Appscript::CommandError => e
+            puts "Error: invalid settings set '#{value}'"
+          end
+        when :position   # works only for window, for example :position => [-40,100]
+          object.position.set(value)
+        when :size       # works only for window, use :size => [rows, columns]
+          object.number_of_columns.set(value[0])
+          object.number_of_rows.set(value[1])
+        when :title
+          # TODO: handle title option
+        when :name
+          # TODO: do nothing? 
+        else # trying to apply any other option
+          begin
+            object.instance_eval(option.to_s).set(value)
+          rescue Appscript::CommandError => e
+            puts "Error setting '#{option} = #{value}' on #{object.inspect}"
+            puts e.message
+          end
+        end
+      end
+    end
+
 
     private
     
