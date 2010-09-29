@@ -9,6 +9,15 @@ module Terminitor
       else nil
       end
     end
+    
+    # Defines how to capture terminal settings on the specified platform
+    def capture_core(platform)
+      core = case platform.downcase
+      when %r{darwin} then Terminitor::MacCapture
+      when %r{linux}  then Terminitor::KonsoleCapture # TODO check for gnome and others
+      else nil
+      end
+    end
 
     # opens doc in system designated editor
     def open_in_editor(path, editor=nil)

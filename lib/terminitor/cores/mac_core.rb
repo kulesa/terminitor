@@ -68,8 +68,7 @@ module Terminitor
         when :position   # works only for window, for example :position => [-40,100]
           object.position.set(value)
         when :size       # works only for window, use :size => [rows, columns]
-          object.number_of_columns.set(value[0])
-          object.number_of_rows.set(value[1])
+          object.size.set(value)
         when :title
           # TODO: handle title option
         when :name
