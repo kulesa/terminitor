@@ -39,17 +39,21 @@ context "AbstractCore" do
 
       context "without default" do
         setup { mock(@core).open_window(nil)          { true  } }
-        setup { mock(@core).open_tab(nil)             { true  } }
-        setup { mock(@core).execute_command('ls', :in => true)  }
-        setup { mock(@core).execute_command('ok', :in => true)  }
-        asserts("ok") { @core.run_in_window('window1', {'tab1' => ['ls','ok']}) }
+        setup { mock(@core).use_current_tab(nil)       { "first"  } }
+        setup { mock(@core).open_tab(nil)             { "second"  } }        
+        setup { mock(@core).execute_command('ls', :in => "first")  }
+        setup { mock(@core).execute_command('ok', :in => "first")  }
+        setup { mock(@core).execute_command('ps', :in => "second")  }        
+        asserts("ok") { @core.run_in_window('window1', {'tab1' => ['ls','ok'], 'tab2' => ['ps']}) }
       end
 
       context "with default" do
-        setup { mock(@core).open_tab(nil) { true  } }
-        setup { mock(@core).execute_command('ls', :in => true)  }
-        setup { mock(@core).execute_command('ok', :in => true)  }
-        asserts("ok") { @core.run_in_window('window1', {'tab' => ['ls','ok']}, :default => true) }
+        setup { mock(@core).use_current_tab(nil)       { "first"  } }
+        setup { mock(@core).open_tab(nil)             { "second"  } }        
+        setup { mock(@core).execute_command('ls', :in => "first")  }
+        setup { mock(@core).execute_command('ok', :in => "first")  }
+        setup { mock(@core).execute_command('ps', :in => "second")  }        
+        asserts("ok") { @core.run_in_window('window1', {'tab1' => ['ls','ok'], 'tab2' => ['ps']}, :default => true) }
       end
 
       context "with working_dir" do
@@ -63,16 +67,19 @@ context "AbstractCore" do
     context "with options" do 
       setup do
         any_instance_of(Terminitor::AbstractCore) do |core|
-          stub(core).load_termfile('/path/to')  { {:options => {'window1'=>{:name => 'main'}, 'tab1'=>{:settings=>'cool', :name=>'named tab'} } } }
+          stub(core).load_termfile('/path/to')  { {:options => {'window1'=>{:name => 'main'}, 'tab1'=>{:settings=>'cool', :name=>'first tab'}, 'tab2'=>{:settings=>'grass', :name=>'second tab'} } } }
         end
         @core = Terminitor::AbstractCore.new('/path/to')
       end
       
       setup { mock(@core).open_window(:name => 'main')  { true  } }
-      setup { mock(@core).open_tab(:settings => 'cool', :name => 'named tab')    { true  } }
-      setup { mock(@core).execute_command('ls', :in => true)  }
-      setup { mock(@core).execute_command('ok', :in => true)  }
-      asserts("ok") { @core.run_in_window('window1', {'tab1' => ['ls','ok']}) }
+      setup { mock(@core).use_current_tab(:settings => 'cool', :name => 'first tab')    { "first"  } }      
+      setup { mock(@core).open_tab(:settings => 'grass', :name => 'second tab')    { "second"  } }
+      setup { mock(@core).execute_command('ls', :in => "first")  }
+      setup { mock(@core).execute_command('ok', :in => "first")  }
+      setup { mock(@core).execute_command('ps', :in => "second")  }
+      
+      asserts("ok") { @core.run_in_window('window1', {'tab1' => ['ls','ok'], 'tab2' => ['ps']}) }
     end
   end
 

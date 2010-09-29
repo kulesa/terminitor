@@ -21,6 +21,11 @@ module Terminitor
     # Opens a new tab and returns itself.
     def open_tab(options = nil)
       terminal_process.keystroke("t", :using => :command_down)
+      use_current_tab(options)
+    end
+    
+    # sets options and returns current tab
+    def use_current_tab(options = nil)
       @working_dir = Dir.pwd
       set_options(return_last_tab, options) if options
       return_last_tab

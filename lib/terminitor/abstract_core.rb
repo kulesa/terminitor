@@ -22,8 +22,15 @@ module Terminitor
     # run_in_window 'window1', {:tab1 => ['ls','ok']}
     def run_in_window(window_name, tabs, options = {})
       open_window(object_options(window_name)) unless options[:default]
+      first_tab = true
       tabs.each_pair do |tab_name,commands|
-        tab = open_tab(object_options(tab_name))
+        # first tab is already opened in the new window
+        if first_tab
+          first_tab = false
+          tab = use_current_tab(object_options(tab_name))
+        else
+          tab = open_tab(object_options(tab_name))
+        end
         commands.insert(0,  "cd \"#{@working_dir}\"") unless @working_dir.to_s.empty?
         commands.each do |cmd|
           execute_command(cmd, :in => tab)
@@ -53,6 +60,11 @@ module Terminitor
 
     # Opens a new tab and returns itself.
     def open_tab(options = nil)
+      @working_dir = Dir.pwd # pass in current directory.
+    end
+    
+    # Uses first tab of already opened window
+    def use_current_tab(options = nil)
       @working_dir = Dir.pwd # pass in current directory.
     end
 
