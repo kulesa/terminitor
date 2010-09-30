@@ -21,20 +21,21 @@ module Terminitor
     # Opens a new tab and returns itself.
     def open_tab(options = nil)
       terminal_process.keystroke("t", :using => :command_down)
-      use_current_tab(options)
-    end
-    
-    # sets options and returns current tab
-    def use_current_tab(options = nil)
-      @working_dir = Dir.pwd
       set_options(return_last_tab, options) if options
       return_last_tab
     end
-
-    # Opens A New Window and returns the tab object.
+    
+    # Opens A New Window, applies settings to the first tab and returns the tab object.
     def open_window(options = nil)
       terminal_process.keystroke("n", :using => :command_down)
-      set_options(active_window, options) if options
+      # ugly, but need to set first tab settings before window size, 
+      # because change of the first tab options causes change of window size
+      if options
+        window_options  = Hash[ options.select {|option, value| MacCapture::OPTIONS_MASK[:window].include?(option) }]
+        tab_options     = Hash[ options.select {|option, value| MacCapture::OPTIONS_MASK[:tab].include?(option) }]
+        set_options(active_window, tab_options)
+        set_options(active_window, window_options)      
+      end
       return_last_tab
     end
 
@@ -71,10 +72,10 @@ module Terminitor
             puts "Error: invalid settings set '#{value}'"
           end
         when :bounds # works only for windows
+          # the only working sequence to restore window size and position! 
           object.bounds.set(value)
-          # strange applescript bug - just 'bounds' doesn't work,
-          # have to set first 'bounds' and then 'position' (and the order is important!)
-          object.position.set(value[0..1])
+          object.frame.set(value)
+          object.position.set(value)
         when :title
           # TODO: handle title option
         when :name

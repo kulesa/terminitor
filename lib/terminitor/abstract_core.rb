@@ -20,14 +20,17 @@ module Terminitor
     # this command will run commands in the designated window
     # run_in_window 'window1', {:tab1 => ['ls','ok']}
     def run_in_window(window_name, window_content, options = {})
-      open_window(window_content[:options]) unless options[:default]
+      window_options = window_content[:options]      
       first_tab = true
       window_content[:tabs].each_pair do |tab_name, tab_content|
+        # Open window on first 'tab' statement
         # first tab is already opened in the new window, so first tab should be
         # opened as a new tab in default window only
+        tab_options = tab_content[:options]
         if first_tab && !options[:default]
-          first_tab = false
-          tab = use_current_tab(tab_content[:options])
+          first_tab = false 
+          window_options = Hash[window_options.to_a + tab_options.to_a] # safe merge
+          tab = open_window(window_options.empty? ? nil : window_options)
         else
           tab = open_tab(tab_content[:options])
         end
@@ -57,14 +60,10 @@ module Terminitor
     def open_tab(options = nil)
       @working_dir = Dir.pwd # pass in current directory.
     end
-    
-    # Uses first tab of already opened window
-    def use_current_tab(options = nil)
-      @working_dir = Dir.pwd # pass in current directory.
-    end
 
     # Opens a new window and returns the tab object.
     def open_window(options = nil)
+      @working_dir = Dir.pwd # pass in current directory.      
     end
 
   end

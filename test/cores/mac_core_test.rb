@@ -9,7 +9,7 @@ if platform?("darwin") # Only run test if it's darwin
       any_instance_of(Terminitor::MacCore) do |core|
         stub(core).app('Terminal')            { terminal  }
         stub(core).load_termfile('/path/to')  { true      }
-      end
+      end 
     end
     setup { @mac_core = Terminitor::MacCore.new('/path/to') }
 
@@ -57,13 +57,15 @@ if platform?("darwin") # Only run test if it's darwin
       setup do
         process = Object.new
         window = Object.new
+        tab = Object.new
         mock(process).keystroke('n', :using => :command_down)
-        mock(@mac_core).set_options(window, :option1 => '1', :option2 => "2")
-        mock(@mac_core).active_window { window }        
+        mock(@mac_core).set_options(window, :bounds => '1')
+        mock(@mac_core).set_options(window, :settings => "2")       
+        mock(@mac_core).active_window { window }.times(2)        
         mock(@mac_core).return_last_tab   { true    }
         mock(@mac_core).terminal_process  { process }
       end
-      asserts("opens window with options") { @mac_core.open_window(:option1 => '1', :option2 => '2')}
+      asserts("opens window with options") { @mac_core.open_window(:bounds => '1', :settings => '2')}
     end
     
     context "return_last_tab" do
