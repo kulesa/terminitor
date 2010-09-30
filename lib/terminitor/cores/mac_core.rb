@@ -62,6 +62,7 @@ module Terminitor
     
     # Sets options of the given object
     def set_options(object, options = {})
+      puts ">> settings on #{object.inspect}"
       options.each_pair do |option, value| 
         case option
         when :settings   # works for windows and tabs, for example :settings => "Grass"
@@ -70,10 +71,6 @@ module Terminitor
           rescue Appscript::CommandError => e
             puts "Error: invalid settings set '#{value}'"
           end
-        when :position   # works only for window, for example :position => [-40,100]
-          object.position.set(value)
-        when :size       # works only for window, use :size => [rows, columns]
-          object.size.set(value)
         when :title
           # TODO: handle title option
         when :name

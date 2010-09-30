@@ -6,7 +6,6 @@ module Terminitor
       file = File.read(path)
       @setup = []
       @windows = { 'default' => {}}
-      @options = {}
       @_context = @windows['default'] 
       instance_eval(file)
     end
@@ -32,9 +31,9 @@ module Terminitor
     def window(options = nil, &block)
       options ||= {}      
       window_name = options[:name] || "window#{@windows.keys.size}"
-      @options[window_name] = options
-      window_tabs = @windows[window_name] = {}
-      @_context, @_old_context = window_tabs, @_context
+      window_contents = @windows[window_name] = {:tabs => {}}
+      window_contents[:options] = options unless options.empty?
+      @_context, @_old_context = window_contents[:tabs], @_context
       instance_eval(&block)
       @_context = @_old_context
     end
@@ -52,20 +51,19 @@ module Terminitor
       options ||= {}
       if block_given?
         tab_name = options[:name] || "tab#{@_context.keys.size}"
-        @options[tab_name] = options
-        tab_tasks = @_context[tab_name] = []
-        @_context, @_old_context = tab_tasks, @_context
+        tab_contents = @_context[tab_name] = {:commands => []}
+        tab_contents[:options] = options unless options.empty?
+        @_context, @_old_context = tab_contents[:commands], @_context
         instance_eval(&block)
         @_context = @_old_context
       else
-        tab_tasks = @_context["tab#{@_context.keys.size}"] = []
-        tab_tasks.concat([options] + commands)
+        tab_tasks = @_context["tab#{@_context.keys.size}"] = { :commands => [options].concat(commands)}
       end
     end
 
     # Returns yaml file as Terminitor formmatted hash
     def to_hash
-      { :setup => @setup, :windows => @windows, :options => @options }
+      { :setup => @setup, :windows => @windows }
     end
 
 

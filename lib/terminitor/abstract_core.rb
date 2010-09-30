@@ -12,27 +12,27 @@ module Terminitor
     def process!
       term_setups = @termfile[:setup]
       term_windows = @termfile[:windows]
-      term_options = @termfile[:options]
       run_in_window('default', term_windows['default'], :default => true) unless term_windows['default'].to_s.empty?
       term_windows.delete('default')
-      term_windows.each_pair { |window_name, tabs| run_in_window(window_name, tabs) }
+      term_windows.each_pair { |window_name, window_content| run_in_window(window_name, window_content) }
     end
 
     # this command will run commands in the designated window
     # run_in_window 'window1', {:tab1 => ['ls','ok']}
-    def run_in_window(window_name, tabs, options = {})
-      open_window(object_options(window_name)) unless options[:default]
+    def run_in_window(window_name, window_content, options = {})
+      open_window(window_content[:options]) unless options[:default]
       first_tab = true
-      tabs.each_pair do |tab_name,commands|
-        # first tab is already opened in the new window
-        if first_tab
+      window_content[:tabs].each_pair do |tab_name, tab_content|
+        # first tab is already opened in the new window, so first tab should be
+        # opened as a new tab in default window only
+        if first_tab && !options[:default]
           first_tab = false
-          tab = use_current_tab(object_options(tab_name))
+          tab = use_current_tab(tab_content[:options])
         else
-          tab = open_tab(object_options(tab_name))
+          tab = open_tab(tab_content[:options])
         end
-        commands.insert(0,  "cd \"#{@working_dir}\"") unless @working_dir.to_s.empty?
-        commands.each do |cmd|
+        tab_content[:commands].insert(0,  "cd \"#{@working_dir}\"") unless @working_dir.to_s.empty?
+        tab_content[:commands].each do |cmd|
           execute_command(cmd, :in => tab)
         end
       end
@@ -42,11 +42,6 @@ module Terminitor
     # if it matches legacy yaml, parse as yaml, else use new dsl
     def load_termfile(path)
       File.extname(path) == '.yml' ? Terminitor::Yaml.new(path).to_hash : Terminitor::Dsl.new(path).to_hash
-    end
-    
-    # Returns options for the given window or tab
-    def object_options(object_name)
-      @termfile[:options][object_name] if @termfile[:options]
     end
 
 
