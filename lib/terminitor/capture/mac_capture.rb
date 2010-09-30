@@ -4,10 +4,10 @@ module Terminitor
     include Appscript
     
     # Defines what options of window or tab to capture and how
+    # just in case we'll need to get other properties
     OPTIONS_MASK = {
       :window => {
-        :position => "position", 
-        :size => "size", 
+        :bounds => "bounds"
       },
       :tab => {
         :settings => "current_settings.name"
@@ -33,7 +33,6 @@ module Terminitor
           windows << {:options => options, :tabs => tabs}
         end
       end
-      puts windows.inspect
       windows
     end
     

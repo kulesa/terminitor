@@ -62,7 +62,6 @@ module Terminitor
     
     # Sets options of the given object
     def set_options(object, options = {})
-      puts ">> settings on #{object.inspect}"
       options.each_pair do |option, value| 
         case option
         when :settings   # works for windows and tabs, for example :settings => "Grass"
@@ -71,6 +70,11 @@ module Terminitor
           rescue Appscript::CommandError => e
             puts "Error: invalid settings set '#{value}'"
           end
+        when :bounds # works only for windows
+          object.bounds.set(value)
+          # strange applescript bug - just 'bounds' doesn't work,
+          # have to set first 'bounds' and then 'position' (and the order is important!)
+          object.position.set(value[0..1])
         when :title
           # TODO: handle title option
         when :name
