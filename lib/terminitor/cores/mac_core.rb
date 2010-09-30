@@ -19,15 +19,23 @@ module Terminitor
     end
 
     # Opens a new tab and returns itself.
-    def open_tab
+    def open_tab(options = nil)
       terminal_process.keystroke("t", :using => :command_down)
-      @working_dir = Dir.pwd
+      set_options(return_last_tab, options) if options
       return_last_tab
     end
-
-    # Opens A New Window and returns the tab object.
-    def open_window
+    
+    # Opens A New Window, applies settings to the first tab and returns the tab object.
+    def open_window(options = nil)
       terminal_process.keystroke("n", :using => :command_down)
+      # ugly, but need to set first tab settings before window size, 
+      # because change of the first tab options causes change of window size
+      if options
+        window_options  = Hash[ options.select {|option, value| MacCapture::OPTIONS_MASK[:window].include?(option) }]
+        tab_options     = Hash[ options.select {|option, value| MacCapture::OPTIONS_MASK[:tab].include?(option) }]
+        set_options(active_window, tab_options)
+        set_options(active_window, window_options)      
+      end
       return_last_tab
     end
 
@@ -52,6 +60,37 @@ module Terminitor
         window.properties_.get[:frontmost] rescue false
       end
     end
+    
+    # Sets options of the given object
+    def set_options(object, options = {})
+      options.each_pair do |option, value| 
+        case option
+        when :settings   # works for windows and tabs, for example :settings => "Grass"
+          begin
+            object.current_settings.set(@terminal.settings_sets[value])
+          rescue Appscript::CommandError => e
+            puts "Error: invalid settings set '#{value}'"
+          end
+        when :bounds # works only for windows
+          # the only working sequence to restore window size and position! 
+          object.bounds.set(value)
+          object.frame.set(value)
+          object.position.set(value)
+        when :title
+          # TODO: handle title option
+        when :name
+          # TODO: do nothing? 
+        else # trying to apply any other option
+          begin
+            object.instance_eval(option.to_s).set(value)
+          rescue Appscript::CommandError => e
+            puts "Error setting '#{option} = #{value}' on #{object.inspect}"
+            puts e.message
+          end
+        end
+      end
+    end
+
 
     private
     

@@ -6,12 +6,16 @@ setup 'echo "setup"'
 
 tab "echo 'default'", "echo 'default tab'"
 
-window do
+window :name => 'main', :size => [80,10], :position => [0, 0] do
+
   tab "echo 'first tab'", "echo 'of window'"
   
-  tab "named tab" do
+  tab :settings => "Ocean" do
     run "echo 'named tab'"
     run "ls"
   end
 end
 
+window do 
+  tab "echo 'window and tab without options'"
+end
